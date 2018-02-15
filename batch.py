@@ -22,6 +22,7 @@ Classes
     GibsonCtagDesign"""
 
 from Bio import SeqIO
+from collections import OrderedDict
 import copy
 from cStringIO import StringIO
 import dna
@@ -36,23 +37,23 @@ import tool
 with open(paths.UNS_PATH, 'r') as f:
     UNS = f.read().strip().lower().split('\n')
 # Module globals: maps to decode form selectoptions
-MAP_ASSEMBLY_METHOD = {'SOE-PCR':'SoePcr',
-                       'Gibson':'Gibson'}
-MAP_MOD_TYPE = {'Knockout':'Ko',
-                'Knockdown':'Ctag',
-                'Overexpression':'Ntag',
-                'Ntag':'Ntag',
-                'Ctag':'Ctag'}
-MAP_PLASMID_PATH = dict(zip(
+MAP_ASSEMBLY_METHOD = OrderedDict([('Gibson', 'Gibson'),
+                                   ('SOE-PCR', 'SoePcr')])
+MAP_MOD_TYPE = OrderedDict([('Knockout','Ko'),
+                ('Knockdown', 'Ctag'),
+                ('Overexpression', 'Ntag'),
+                ('Ntag', 'Ntag'),
+                ('Ctag', 'Ctag')])
+MAP_PLASMID_PATH = OrderedDict(zip(
             ('Lox-ZeoR','Lox-NourR','Lox-G418R','Lox-HygroR','pUC-AmpR'),
             [paths.PLASMID_PREFIX + s for s in 
             ('RMp4694.gb','RMp4930.gb','RMp4957.gb','RMp4954.gb','RMp1087.ape')
             ]))
-MAP_MOD_IN_FRAME = {'Knockout':False,
-                    'Knockdown':False,
-                    'Overexpression':False,
-                    'Ntag':True,
-                    'Ctag':True}
+MAP_MOD_IN_FRAME = OrderedDict([('Knockout', False),
+                    ('Knockdown', False),
+                    ('Overexpression', False),
+                    ('Ntag', True),
+                    ('Ctag', True)])
 # Module globals: small dna objects and dna-related variables
 M_BASE_PRIMER_PAIR = (dna.Primer('ctgattctgtggataaccgtagtc', name='RMo11228'),
                      dna.Primer('gaattggttaattggttgtaacacat', name='RMo11229'))
@@ -107,7 +108,7 @@ class Batch(object):
                                     (Gibson or SOE-PCR)
             mod_type (str): modification type, constrained by assembly_method
                             (Knockout, etc.)
-            marker (str): name that references a static marker
+            marker_name (str): name that references a static marker
                           sequence file on server
             target_text (str): textarea input of gene IDs
                                or FASTA of nucleotide sequences
@@ -126,7 +127,8 @@ class Batch(object):
         for target in self.targets:
             # Create hybrid instance dynamically
             args = (target, [self.M, self.T, self.V], self.in_frame)
-            design = eval(self.assembly_method+self.mod_type+'Design')(*args)
+            design = eval(self.assembly_method
+                    + self.mod_type + 'Design')(*args)
             design.flanking_pcrs()
             design.colony_pcr()
             design.extend_fragments()
@@ -143,7 +145,8 @@ class Batch(object):
             return [dna.Dna(str(r.seq), name=r.name)
                     for r in SeqIO.parse(StringIO(text), 'fasta')]
         else:
-            return [dna.Dna('',name=t) for t in text.strip().split('\n')]
+            return [dna.Dna('',name=t)
+                    for t in text.strip().replace('\r','').split('\n')]
     def common_ops(self):
         """Performs Dna operations common to all Designs in a Batch"""
         basename = lambda f: f.name.split('/')[-1].split('.')[0]
@@ -263,7 +266,8 @@ class Batch(object):
                 design.annotate_plasmid(ape_fname).write(
                         paths.OUTPUT_PREFIX + ape_fname)
                 archive_contents.append(paths.OUTPUT_PREFIX + ape_fname)
-        subprocess.check_call(['zip', paths.PLASMIDS_ZIP] + archive_contents)
+        subprocess.check_call(['zip', '-j', paths.PLASMIDS_ZIP]
+                + archive_contents)
         return
     def write_loci_zip(self):
         """Write an archive of all the locus maps for a design,
@@ -275,20 +279,26 @@ class Batch(object):
             design.annotate_locus('locus_map').write(
                     paths.OUTPUT_PREFIX + ape_fname)
             archive_contents.append(paths.OUTPUT_PREFIX + ape_fname)
-        subprocess.check_call(['zip', paths.LOCI_ZIP] + archive_contents)
+        subprocess.check_call(['zip', '-j', paths.LOCI_ZIP]
+                + archive_contents)
         return
+    def list_operations(self):
+        """Returns list of (name, instruction) pairs for batch operations,
+        then each design in the batch."""
+        rows = []
+        for op in [self.M, self.V]:
+            if op:
+                rows.append(('Common', op.name, op.instruction))
+        for design in self.designs:
+            for op in design.operations:
+                if op and op not in [self.M, self.V]:
+                    rows.append((design.assembly.name, op.name, op.instruction))
+        return rows
     def print_operations(self):
         """Prints (name, instruction) pairs for common batch operations,
         then each design in the batch."""
-        print('BATCH OPERATIONS')
-        for op in [self.M, self.V]:
-            if op:
-                print('{}\t{}'.format(op.name, op.instruction))
-        for design in self.designs:
-            print('DESIGN {}'.format(design.assembly.name))
-            for op in design.operations:
-                if op and op not in [self.M, self.V]:
-                    print('{}\t{}'.format(op.name, op.instruction))
+        for row in self.list_operations():
+            print('\t'.join(row))
 
 class AssemblyMethod(object):
     """Base class for specific assembly methods.

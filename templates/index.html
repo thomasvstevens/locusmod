@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <title>locusmod</title>
+  <body>
+    <h1>locusmod submission</h1>
+    <form action="{{ url_for('download') }}" method="post" id="submission">
+      <fieldset>
+        Modification Type:<select name="mod_type">
+        {% for k in mod_keys %}
+          <option value="{{ k }}">{{ k }}</option>
+        {% endfor %}
+        </select><br>
+        Assembly Method:<select name="assembly_method">
+        {% for k in assembly_keys %}
+          <option value="{{ k }}">{{ k }}</option>
+        {% endfor %}
+        </select><br>
+        Yeast Marker:<select name="marker_name">
+        {% for k in marker_keys %}
+          <option value="{{ k }}">{{ k }}</option>
+        {% endfor %}
+        </select><br>
+        Targets:<br>
+        <textarea name="target_text" rows="5" cols="50" wrap="hard"
+          placeholder="PAS IDs or FASTA records"></textarea><br>
+        Tag Sequence:<br><textarea name="tag_text" rows="5" cols="50"
+          wrap="hard" placeholder="For Ntag and Ctag Types only.
+            For Ntag, you must prefix with a promoter+Kozak.
+            For Ctag, you must append a stop+terminator."></textarea><br>
+        Starting Oligo ID:
+        <textarea name="start_oligos" rows="1" cols="10">RMo1</textarea><br>
+        Starting Plasmid ID:
+        <textarea name="start_plasmids" rows="1" cols="10">RMp1</textarea>
+        <input type="submit" value="SUBMIT">
+      </fieldset>
+    </form>
+  </body>
+</html>

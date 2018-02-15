@@ -9,9 +9,9 @@ Supported Use Cases:
 4. N-terminal tagging
 5. C-terminal tagging
 
-Data Requirements
+External Data Requirements
 ------
-LocusMod needs the following external data to translate user input into plasmid designs:
+**locusmod** needs the following external data to translate user input into plasmid designs:
 ```bash
 static/
       genome/
@@ -28,12 +28,12 @@ static/
 Output Data (Downloads)
 ------
 ```bash
-output/
-      primers.csv
-      idt_import.csv
-      plasmids.csv
-      plasmids.zip
-      loci.zip
+static/output/
+              primers.csv
+              idt_import.csv
+              plasmids.csv
+              plasmids.zip
+              loci.zip
 ```
 
 Python Dependencies
@@ -47,6 +47,7 @@ Compiled Dependencies
 
 0. Navigate to directory for binaries:
 ```bash
+mkdir -p static/tool
 cd static/tool
 ```
 

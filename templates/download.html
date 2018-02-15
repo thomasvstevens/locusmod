@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <title>locusmod</title>
+  <body>
+    <h1>locusmod results</h1>
+    {% for file in files %}
+    <a href="{{ url_for('static', filename='output/' + file) }}"
+       download="{{ file }}">Download {{ file }}</a><br>
+    {% endfor %}
+    <br>
+    <table>
+      <tr>
+        <th>Design</th>
+        <th>Product</th>
+        <th>Instruction</th>
+      </tr>
+      {% for row in rows %}
+        <tr>
+        {% for item in row %}
+          <td>{{ item }}</td>
+        {% endfor %}
+        </tr>
+      {% endfor %}
+    </table>
+    <br>
+    <a href="{{ url_for('index') }}">Submit another</a>
+  </body>
+</html>
